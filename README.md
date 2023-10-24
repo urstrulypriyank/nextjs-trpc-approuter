@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
-
 ## Getting Started
 
-First, run the development server:
+Pre-requisites: Next.js with AppRouter
+
+### Installation of trpc/client and trpc/server
 
 ```bash
-npm run dev
+npm install @trpc/server @trpc/client
 # or
-yarn dev
+yarn add @trpc/server @trpc/client
 # or
-pnpm dev
+pnpm install @trpc/server @trpc/client
 # or
-bun dev
+bun install @trpc/server @trpc/client
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setting Up TRPC With Next.js
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## To configure TRPC with Next.js using AppRouter, follow these steps:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+**Step 1: Create a trpc.ts file in the root of your project and export the router and publicProcedure objects:**
 
-## Learn More
+```JavaScript
+import { initTRPC } from "@trpc/server";
+const t = initTRPC.create();
 
-To learn more about Next.js, take a look at the following resources:
+export const router = t.router;
+export const publicProcedure = t.procedure;
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+**Step 2:**
+    Create a root.ts file in the server/router directory and export the appRouter object:
 
-## Deploy on Vercel
+``` JavaScript
+import * as trpc from "@trpc/server";
+import { router, publicProcedure } from "../trpc";
+export const appRouter = router({
+sayHi: publicProcedure.query(() => "Hi from sayHi procedure"),
+});
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+export type AppRouter = typeof appRouter;
+```
+**Step 3:**Create a client.ts file in the root of your project and export the api object:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```JavaScript
+
+import { type AppRouter } from "@/server/router/root";
+import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
+export const api = createTRPCProxyClient<AppRouter>({
+links: [
+httpBatchLink({
+url: "http://localhost:3000/api/trpc",
+}),
+],
+});
+```
+
+
+**Step 4:**Create an api/trpc/[trpc]/route.ts file and export the handler object:
+
+```JavaScript
+
+import { appRouter } from "@/server/router/root";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+const handler = (req: Request) =>
+fetchRequestHandler({
+endpoint: "/api/trpc",
+req,
+router: appRouter,
+createContext: () => ({}),
+});
+export { handler as GET, handler as POST };
+```
+Now you can verify by making request to /api/trpc/sayHi
+Or you 
+can use the api object in your components to make requests to the server.
