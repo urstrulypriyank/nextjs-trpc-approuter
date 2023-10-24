@@ -41,7 +41,8 @@ sayHi: publicProcedure.query(() => "Hi from sayHi procedure"),
 
 export type AppRouter = typeof appRouter;
 ```
-**Step 3:**Create a client.ts file in the root of your project and export the api object:
+**Step 3:**
+Create a client.ts file in the root of your project and export the api object:
 
 ```JavaScript
 
@@ -57,7 +58,8 @@ url: "http://localhost:3000/api/trpc",
 ```
 
 
-**Step 4:**Create an api/trpc/[trpc]/route.ts file and export the handler object:
+**Step 4:**
+Create an api/trpc/[trpc]/route.ts file and export the handler object:
 
 ```JavaScript
 
